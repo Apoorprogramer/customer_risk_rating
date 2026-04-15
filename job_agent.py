@@ -131,7 +131,7 @@ def _unlock_widget(key_prefix: str = "") -> tuple[bool, dict]:
 def profile_vault_page() -> None:
     st.title("🔐 Profile Vault")
     st.caption(
-        "All data is encrypted with AES-128-Fernet using PBKDF2-SHA256 key derivation. "
+        "All data is encrypted with AES-256-CBC (Fernet) using PBKDF2-SHA256 key derivation. "
         "Your passphrase is **never** stored on disk."
     )
 

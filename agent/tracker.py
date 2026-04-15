@@ -78,6 +78,15 @@ class JobTracker:
                     done        INTEGER DEFAULT 0
                 )
             """)
+            # Indexes for efficient filtered / sorted queries
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_apps_status_score
+                ON applications (status, relevance_score DESC, updated_at DESC)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_apps_score_updated
+                ON applications (relevance_score DESC, updated_at DESC)
+            """)
 
     def _conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self._db)
@@ -185,16 +194,26 @@ class JobTracker:
 
     # ── read operations ───────────────────────────────────────────────────────
 
+    # columns returned for list views (excludes large text blobs)
+    _LIST_COLS = (
+        "id, title, company, location, remote, url, source, posted_at, "
+        "salary_min, salary_max, tags, status, relevance_score, relevance_label, "
+        "relevance_reason, notes, applied_at, updated_at"
+    )
+
     def get_jobs(self, status: Optional[str] = None) -> list[dict]:
+        """Return jobs without large blob columns for efficient list rendering."""
         with self._conn() as conn:
             if status:
                 rows = conn.execute(
-                    "SELECT * FROM applications WHERE status=? ORDER BY relevance_score DESC NULLS LAST, updated_at DESC",
+                    f"SELECT {self._LIST_COLS} FROM applications "
+                    "WHERE status=? ORDER BY relevance_score DESC, updated_at DESC",
                     (status,),
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    "SELECT * FROM applications ORDER BY relevance_score DESC NULLS LAST, updated_at DESC"
+                    f"SELECT {self._LIST_COLS} FROM applications "
+                    "ORDER BY relevance_score DESC, updated_at DESC"
                 ).fetchall()
         return [_row_to_dict(r) for r in rows]
 

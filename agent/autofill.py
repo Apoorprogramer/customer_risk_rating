@@ -130,7 +130,7 @@ def _job_block(job: dict) -> str:
     return (
         f"Title:   {job.get('title', 'N/A')}\n"
         f"Company: {job.get('company', 'N/A')}\n"
-        f"Location:{job.get('location', 'N/A')} "
+        f"Location: {job.get('location', 'N/A')} "
         f"(Remote: {'Yes' if job.get('remote') else 'No'})\n"
         f"Description:\n{job.get('description', '')[:800]}"
     )
